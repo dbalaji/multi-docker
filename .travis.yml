@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dbalaji/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dbalaji/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t dbalaji/multi-client ./client
+  - docker build -t dbalaji/multi-nginx ./nginx
+  - docker build -t dbalaji/multi-server ./server
+  - docker build -t dbalaji/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push dbalaji/multi-client
+  - docker push dbalaji/multi-nginx
+  - docker push dbalaji/multi-server
+  - docker push dbalaji/multi-worker
